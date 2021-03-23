@@ -18,3 +18,8 @@ CREATE MATERIALIZED VIEW  geospatial.drainage_mgb_niger_masked AS
 REFRESH MATERIALIZED VIEW geospatial.drainage_mgb_niger_masked;
 CREATE INDEX idx_drainage_mgb_niger_masked_id ON geospatial.drainage_mgb_niger_masked(mini);
 --CREATE INDEX idx_drainage_mgb_niger_masked_ordem ON drainage_mgb_niger_masked(ordem);
+
+COMMENT ON MATERIALIZED VIEW geospatial.drainage_mgb_niger_masked IS 'Drainage minibasins on Niger Watershed Basin, as defined by MGB model. With a geographical mask applied to remove out-of-scope area.';
+
+
+COMMENT ON TABLE geospatial.drainage_mgb_niger_acap IS 'Drainage minibasins on Niger Watershed Basin, as defined by MGB model.';

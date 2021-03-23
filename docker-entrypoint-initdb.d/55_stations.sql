@@ -33,6 +33,8 @@ WITH (
 )
 TABLESPACE pg_default;
 
+COMMENT ON TABLE geospatial.stations IS 'Stations are virtual. They feature minibasins of interest (join them with drainage_mgb data on "mini" field)';
+
 ALTER TABLE geospatial.stations
     OWNER to postgres;
 
@@ -50,16 +52,24 @@ CSV HEADER;
 -----------------------------------------------------
 -- DROP VIEW geospatial.stations_geo;
 
+-- View: geospatial.stations_geo
+
+-- DROP VIEW geospatial.stations_geo;
+
 CREATE OR REPLACE VIEW geospatial.stations_geo
  AS
  SELECT stations.id,
     stations.minibasin,
     stations.city,
-    st_closestpoint(geo.wkb_geometry, st_centroid(geo.wkb_geometry)) AS wkb_geometry,
-    geo.wkb_geometry AS poly
+    ST_Transform(st_closestpoint(geo.wkb_geometry, st_centroid(geo.wkb_geometry)), 4326)::geometry(Geometry,4326) AS wkb_geometry
    FROM geospatial.stations stations
      JOIN geospatial.drainage_mgb_niger_acap geo ON stations.minibasin::numeric = geo.mini
   ORDER BY stations.id;
 
+COMMENT ON VIEW geospatial.stations_geo IS 'Stations are virtual. They feature minibasins of interest, close to a key City.';
+
 ALTER TABLE geospatial.stations_geo
     OWNER TO postgres;
+
+GRANT ALL ON TABLE geospatial.stations_geo TO postgres;
+GRANT SELECT ON TABLE geospatial.stations_geo TO tileserv;
