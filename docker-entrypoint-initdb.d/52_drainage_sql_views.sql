@@ -50,8 +50,6 @@ CREATE OR REPLACE VIEW hyfaa.data_with_assim_aggregate_json
 SELECT cell_id, flow_median_yearly_average,
        json_agg(
           json_build_object(
-      		'cell_id', cell_id,
-      		'flow_median_yearly_average', flow_median_yearly_average,
       		'date', date,
       		'flow_median', flow_median,
       		'flow_anomaly', CASE WHEN flow_median_yearly_average = 0 THEN null ELSE 100 * (flow_median - flow_median_yearly_average) / flow_median_yearly_average END
