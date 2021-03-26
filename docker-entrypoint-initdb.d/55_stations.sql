@@ -72,4 +72,3 @@ ALTER TABLE geospatial.stations_geo
     OWNER TO postgres;
 
 GRANT ALL ON TABLE geospatial.stations_geo TO postgres;
-GRANT SELECT ON TABLE geospatial.stations_geo TO tileserv;

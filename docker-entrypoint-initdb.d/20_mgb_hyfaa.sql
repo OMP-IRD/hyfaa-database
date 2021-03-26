@@ -6,7 +6,7 @@
 
 -- object: hyfaa_backend | type: ROLE --
 -- DROP ROLE IF EXISTS hyfaa_backend;
-CREATE ROLE hyfaa_backend WITH 
+CREATE ROLE hyfaa_backend WITH
 	LOGIN
 	ENCRYPTED PASSWORD 'hyfaa_backend'
 	CONNECTION LIMIT 20;
@@ -16,12 +16,12 @@ COMMENT ON ROLE hyfaa_backend IS 'Role used by backend application. Can only per
 
 -- object: hyfaa_publisher | type: ROLE --
 -- DROP ROLE IF EXISTS hyfaa_publisher;
-CREATE ROLE hyfaa_publisher WITH 
+CREATE ROLE hyfaa_publisher WITH
 	LOGIN
 	ENCRYPTED PASSWORD 'hyfaa_publisher'
 	CONNECTION LIMIT 1;
 -- ddl-end --
-COMMENT ON ROLE hyfaa_publisher IS 'Role used by HYFAA publisher script. 
+COMMENT ON ROLE hyfaa_publisher IS 'Role used by HYFAA publisher script.
 Can update/insert into data_with tables';
 -- ddl-end --
 
@@ -36,7 +36,7 @@ Can update/insert into data_with tables';
 -- -- ddl-end --
 -- COMMENT ON DATABASE mgb_hyfaa IS 'MGB - HYFAA database. Stores data computed using MGB model with HYFAA sequencer.';
 -- -- ddl-end --
--- 
+--
 
 -- object: hyfaa | type: SCHEMA --
 -- DROP SCHEMA IF EXISTS hyfaa CASCADE;
@@ -89,10 +89,13 @@ CREATE TABLE hyfaa.data(
 	elevation_mean float,
 	elevation_median float,
 	elevation_stddev float,
+	elevation_mad float,
 	flow_mean float,
 	flow_median float,
 	flow_stddev float,
+	flow_mad float,
 	update_time timestamptz,
+	is_analysis boolean,
 	CONSTRAINT pk PRIMARY KEY (cell_id,date)
 
 );
@@ -110,13 +113,19 @@ COMMENT ON COLUMN hyfaa.data.elevation_median IS 'Water elevation in m. Median v
 -- ddl-end --
 COMMENT ON COLUMN hyfaa.data.elevation_stddev IS 'Water elevation in m. Standard deviation';
 -- ddl-end --
+COMMENT ON COLUMN hyfaa.data.elevation_mad IS 'Water elevation in m. Median absolute deviation';
+-- ddl-end --
 COMMENT ON COLUMN hyfaa.data.flow_mean IS 'Stream flow. Mean value';
 -- ddl-end --
 COMMENT ON COLUMN hyfaa.data.flow_median IS 'Stream flow. Median value';
 -- ddl-end --
 COMMENT ON COLUMN hyfaa.data.flow_stddev IS 'Stream flow. Standard deviation';
 -- ddl-end --
+COMMENT ON COLUMN hyfaa.data.flow_mad IS 'Stream flow. Median absolute  deviation';
+-- ddl-end --
 COMMENT ON COLUMN hyfaa.data.update_time IS 'Time of last update';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data.is_analysis IS 'Boolean. Whether the value comes from analysis or control series';
 -- ddl-end --
 ALTER TABLE hyfaa.data OWNER TO postgres;
 -- ddl-end --
@@ -160,7 +169,7 @@ CREATE TABLE hyfaa.data_no_assim(
 ) INHERITS(hyfaa.data)
 ;
 -- ddl-end --
-COMMENT ON TABLE hyfaa.data_no_assim IS 'MGB hydrological data, calculated using HYFAA scheduler. 
+COMMENT ON TABLE hyfaa.data_no_assim IS 'MGB hydrological data, calculated using HYFAA scheduler.
 Data computed without assimilation.';
 -- ddl-end --
 ALTER TABLE hyfaa.data_no_assim OWNER TO postgres;
