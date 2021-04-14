@@ -72,3 +72,16 @@ ALTER TABLE geospatial.stations_geo
     OWNER TO postgres;
 
 GRANT ALL ON TABLE geospatial.stations_geo TO postgres;
+
+
+GRANT USAGE
+   ON SCHEMA geospatial
+   TO hyfaa_backend;
+
+GRANT SELECT
+ON TABLE geospatial.stations
+TO hyfaa_backend;
+
+GRANT SELECT
+ON TABLE geospatial.stations_geo
+TO hyfaa_backend;
