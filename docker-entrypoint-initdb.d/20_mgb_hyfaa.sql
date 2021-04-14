@@ -77,10 +77,6 @@ COMMENT ON COLUMN hyfaa.state.last_updated_without_errors_jd IS 'Last time the u
 ALTER TABLE hyfaa.state OWNER TO postgres;
 -- ddl-end --
 
-INSERT INTO hyfaa.state (tablename, last_updated, last_updated_jd, update_errors, last_updated_without_errors, last_updated_without_errors_jd) VALUES ('data_mgbstandard', '1950-01-01T00:00:00.000Z00', 0, 0, '1950-01-01T00:00:00.000Z00', 0);
-INSERT INTO hyfaa.state (tablename, last_updated, last_updated_jd, update_errors, last_updated_without_errors, last_updated_without_errors_jd) VALUES ('data_assimilated', '1950-01-01T00:00:00.000Z00', 0, 0, '1950-01-01T00:00:00.000Z00', 0);
--- ddl-end --
-
 -- object: hyfaa.data_assimilated | type: TABLE --
 -- DROP TABLE IF EXISTS hyfaa.data_assimilated CASCADE;
 CREATE TABLE hyfaa.data_assimilated(
@@ -159,6 +155,55 @@ COMMENT ON COLUMN hyfaa.data_mgbstandard.is_analysis IS 'Boolean. Whether the va
 ALTER TABLE hyfaa.data_mgbstandard OWNER TO postgres;
 -- ddl-end --
 
+
+-- object: hyfaa.data_forecast | type: TABLE --
+-- DROP TABLE IF EXISTS hyfaa.data_forecast CASCADE;
+CREATE TABLE hyfaa.data_forecast(
+	cell_id smallint NOT NULL,
+	date date NOT NULL,
+	elevation_mean float,
+	elevation_median float,
+	elevation_stddev float,
+	elevation_mad float,
+	flow_mean float,
+	flow_median float,
+	flow_stddev float,
+	flow_mad float,
+	update_time timestamptz,
+	is_analysis boolean,
+	CONSTRAINT data_forecast_pk PRIMARY KEY (cell_id,date)
+);
+-- ddl-end --
+COMMENT ON TABLE hyfaa.data_forecast IS 'MGB hydrological data, calculated using HYFAA scheduler, with assimilation';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.cell_id IS 'Cell identifier. Called ''cell'' in HYFAA netcdf file, field ''MINI'' in geospatial file';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.date IS 'Date for the values';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.elevation_mean IS 'Water elevation in m. Mean value';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.elevation_median IS 'Water elevation in m. Median value';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.elevation_stddev IS 'Water elevation in m. Standard deviation';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.elevation_mad IS 'Water elevation in m. Median absolute deviation';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.flow_mean IS 'Stream flow. Mean value';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.flow_median IS 'Stream flow. Median value';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.flow_stddev IS 'Stream flow. Standard deviation';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.flow_mad IS 'Stream flow. Median absolute  deviation';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.update_time IS 'Time of last update';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_forecast.is_analysis IS 'Boolean. Whether the value comes from analysis or control series';
+-- ddl-end --
+ALTER TABLE hyfaa.data_forecast OWNER TO postgres;
+-- ddl-end --
+
+
 GRANT USAGE
    ON SCHEMA hyfaa
    TO hyfaa_publisher, hyfaa_backend;
@@ -187,8 +232,20 @@ GRANT SELECT,INSERT,UPDATE,DELETE
    TO hyfaa_publisher;
 -- ddl-end --
 
+-- object: grant_1ed53ebf44 | type: PERMISSION --
+GRANT SELECT
+   ON TABLE hyfaa.data_forecast
+   TO hyfaa_backend;
+-- ddl-end --
+
+-- object: grant_64b914c16f | type: PERMISSION --
+GRANT SELECT,INSERT,UPDATE,DELETE
+   ON TABLE hyfaa.data_forecast
+   TO hyfaa_publisher;
+-- ddl-end --
+
 -- object: grant_bd10ef1483 | type: PERMISSION --
-GRANT SELECT,UPDATE
+GRANT SELECT,INSERT,UPDATE
    ON TABLE hyfaa.state
    TO hyfaa_publisher;
 

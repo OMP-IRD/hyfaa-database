@@ -15,7 +15,7 @@ This is a PostGIS image, so the documentation from [PostGIS](https://hub.docker.
 and [PostgreSQL](https://hub.docker.com/_/postgres) apply.
 
 There is an additional environment variable supported:
-- **WITH_SAMPLE**: loads sample data into the data_with_assim table, so that the derivated views are populated (namely 
+- **WITH_SAMPLE=yes**: loads sample data into the data_with_assim table, so that the derivated views are populated (namely 
 `hyfaa.data_with_assim_aggregate_geo` that is expected to be used with tileserv, for the hyfaa frontend)
 
 You can run this image alone with

@@ -131,7 +131,7 @@ CREATE OR REPLACE FUNCTION hyfaa.get_mgbstandard_values_for_minibasin(mini integ
 $$
 DECLARE jsonarray json;
         BEGIN
-                WITH tbl AS (
+        WITH tbl AS (
             SELECT 	"date",
                     flow_mean
             FROM  hyfaa.data_mgbstandard
@@ -146,3 +146,22 @@ COMMENT ON FUNCTION hyfaa.get_mgbstandard_values_for_minibasin(integer, characte
     IS 'Get mgbstandard data as aggregated json array (array of {date, flow_mean} values) ';
 
 
+CREATE OR REPLACE FUNCTION hyfaa.get_forecast_values_for_minibasin(mini integer, timeinterval varchar default '1 year')
+	RETURNS json AS
+$$
+DECLARE jsonarray json;
+BEGIN
+		WITH tbl AS (
+            SELECT 	"date",
+					 flow_median,
+					 flow_mad
+            FROM  hyfaa.data_forecast
+            WHERE cell_id=mini
+        )
+        SELECT array_to_json(array_agg(row_to_json(tbl))) FROM tbl INTO jsonarray;
+		return jsonarray;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION hyfaa.get_forecast_values_for_minibasin(integer, character varying)
+    IS 'Get forecast data as aggregated json array. ';
