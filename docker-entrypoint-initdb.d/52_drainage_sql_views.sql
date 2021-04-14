@@ -136,6 +136,7 @@ DECLARE jsonarray json;
                     flow_mean
             FROM  hyfaa.data_mgbstandard
             WHERE cell_id=mini
+			ORDER BY "date" DESC
         )
         SELECT array_to_json(array_agg(row_to_json(tbl))) FROM tbl INTO jsonarray;
 		return jsonarray;
@@ -157,6 +158,7 @@ BEGIN
 					 flow_mad
             FROM  hyfaa.data_forecast
             WHERE cell_id=mini
+			ORDER BY "date" DESC
         )
         SELECT array_to_json(array_agg(row_to_json(tbl))) FROM tbl INTO jsonarray;
 		return jsonarray;
