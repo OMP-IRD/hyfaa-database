@@ -8,4 +8,5 @@ if [[ "$WITH_SAMPLE_DATA" == "yes" ]]; then
   psql -d $POSTGRES_DB -U $POSTGRES_USER -c "COPY hyfaa.data_mgbstandard FROM PROGRAM 'gunzip -c /docker-entrypoint-initdb.d/data/data_mgbstandard_stations_sample.csv.gz' delimiter ',' CSV HEADER;"
   psql -d $POSTGRES_DB -U $POSTGRES_USER -c "COPY hyfaa.data_forecast FROM PROGRAM 'gunzip -c /docker-entrypoint-initdb.d/data/data_forecast_stations_sample.csv.gz' delimiter ',' CSV HEADER;"
   psql -d $POSTGRES_DB -U $POSTGRES_USER -c "REFRESH MATERIALIZED VIEW hyfaa.data_with_assim_aggregate_geo;"
+  psql -d $POSTGRES_DB -U $POSTGRES_USER -c "REFRESH MATERIALIZED VIEW hyfaa.data_with_mgbstandard_aggregate_geo;"
 fi
