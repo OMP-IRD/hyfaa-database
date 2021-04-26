@@ -96,6 +96,7 @@ COMMENT ON MATERIALIZED VIEW hyfaa.data_with_assim_aggregate_geo
 
 CREATE OR REPLACE FUNCTION hyfaa.refresh_mat_view_for_assim()
     RETURNS TRIGGER LANGUAGE plpgsql
+    SECURITY DEFINER
     AS $$
     BEGIN
         REFRESH  MATERIALIZED VIEW CONCURRENTLY hyfaa.data_with_assim_aggregate_geo;
