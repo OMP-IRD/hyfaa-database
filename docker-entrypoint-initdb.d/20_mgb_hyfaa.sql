@@ -173,6 +173,8 @@ CREATE TABLE hyfaa.data_forecast(
 	is_analysis boolean,
 	CONSTRAINT data_forecast_pk PRIMARY KEY (cell_id,date)
 );
+
+
 -- ddl-end --
 COMMENT ON TABLE hyfaa.data_forecast IS 'MGB hydrological data, calculated using HYFAA scheduler, with assimilation';
 -- ddl-end --
@@ -202,7 +204,6 @@ COMMENT ON COLUMN hyfaa.data_forecast.is_analysis IS 'Boolean. Whether the value
 -- ddl-end --
 ALTER TABLE hyfaa.data_forecast OWNER TO postgres;
 -- ddl-end --
-
 
 GRANT USAGE
    ON SCHEMA hyfaa
