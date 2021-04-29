@@ -118,7 +118,7 @@ DECLARE jsonarray json;
             SELECT 	"date",
                     flow_mean AS flow
             FROM  hyfaa.data_mgbstandard
-            WHERE cell_id=mini
+            WHERE cell_id=mini AND "date" > now()-timeinterval::interval
 			ORDER BY "date" DESC
         )
         SELECT array_to_json(array_agg(row_to_json(tbl))) FROM tbl INTO jsonarray;
@@ -140,7 +140,7 @@ BEGIN
 					 flow_median AS flow,
 					 flow_mad
             FROM  hyfaa.data_forecast
-            WHERE cell_id=mini
+            WHERE cell_id=mini AND "date" > now()-timeinterval::interval
 			ORDER BY "date" DESC
         )
         SELECT array_to_json(array_agg(row_to_json(tbl))) FROM tbl INTO jsonarray;
