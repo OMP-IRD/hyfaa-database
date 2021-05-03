@@ -5,69 +5,92 @@
 -- on assimilated data
 CREATE OR REPLACE VIEW hyfaa.data_assimilated_aggregate_json
  AS
- WITH data_15d_with_average AS (
-	WITH average AS (SELECT cell_id, avg(flow_median) AS flow_median_yearly_average
-						FROM hyfaa.data_assimilated
-						GROUP BY cell_id),
-	data_15d AS (SELECT * FROM hyfaa.data_assimilated
-						WHERE date IN (SELECT date from hyfaa.data_assimilated
-						GROUP BY date ORDER BY date DESC LIMIT 15)
-				)
-	SELECT data_15d.*, average.flow_median_yearly_average
-	FROM data_15d, average
-	WHERE data_15d.cell_id = average.cell_id
+ WITH has_average AS (
+	WITH has_mean_over_ddoy AS (SELECT * FROM (
+		( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_assimilated WHERE "date" >= now() - '1 year'::interval ) AS d
+		LEFT JOIN
+		( SELECT cell_id, date_part('doy', "date") AS ddoy, avg(flow_median) AS dayly_avg_over_years
+				FROM hyfaa.data_assimilated
+				GROUP BY cell_id, ddoy
+				ORDER BY ddoy DESC, cell_id ) AS by_ddoy
+		USING (cell_id, ddoy)
+		)
+	)
+	SELECT *,
+		avg(flow_median) OVER ( PARTITION BY cell_id
+							 ORDER BY "date" DESC
+							 ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
+							 AS average
+	FROM has_mean_over_ddoy
 )
-SELECT cell_id, flow_median_yearly_average,
+SELECT cell_id,
        json_agg(
           json_build_object(
       		'date', date,
-      		'flow', flow_median,
-      		'flow_anomaly', CASE WHEN flow_median_yearly_average = 0 THEN null ELSE 100 * (flow_median - flow_median_yearly_average) / flow_median_yearly_average END
+      		'flow', ROUND(flow_median),
+      		'flow_anomaly', CASE WHEN average = 0 THEN null ELSE ROUND((100 * (flow_median - average) / average)::numeric) END
       		)
-	        ORDER BY date DESC
+	        ORDER BY "date" DESC
         ) AS values
-FROM data_15d_with_average AS v
-GROUP BY cell_id, flow_median_yearly_average
+FROM has_average
+WHERE "date" IN (SELECT "date" from hyfaa.data_assimilated
+						GROUP BY "date" ORDER BY "date" DESC LIMIT 15)
+GROUP BY cell_id
 ORDER BY cell_id;
 
 ALTER TABLE hyfaa.data_assimilated_aggregate_json
     OWNER TO postgres;
 
-COMMENT ON  VIEW hyfaa.data_assimilated_aggregate_json IS 'Keep only the flow median. Compute the average for each minibasin. Use it to compute the anomaly. Aggregate the results for the n last days into a json field';
-
+COMMENT ON  VIEW hyfaa.data_assimilated_aggregate_json IS
+    'Keep only the flow median. Compute a floating average for each minibasin
+    (average over the day +/- 15days, but spanning over the years.)
+    Use it to compute the anomaly. Round the values.
+    Aggregate the results for the n last days into a json field';
 
 -- on mgbstandard data
 CREATE OR REPLACE VIEW hyfaa.data_mgbstandard_aggregate_json
  AS
- WITH data_15d_with_average AS (
-	WITH average AS (SELECT cell_id, avg(flow_mean) AS flow_mean_yearly_average
-						FROM hyfaa.data_mgbstandard
-						GROUP BY cell_id),
-	data_15d AS (SELECT * FROM hyfaa.data_mgbstandard
-						WHERE date IN (SELECT date from hyfaa.data_mgbstandard
-						GROUP BY date ORDER BY date DESC LIMIT 15)
-				)
-	SELECT data_15d.*, average.flow_mean_yearly_average
-	FROM data_15d, average
-	WHERE data_15d.cell_id = average.cell_id
+WITH has_average AS (
+	WITH has_mean_over_ddoy AS (SELECT * FROM (
+		( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_mgbstandard WHERE "date" >= now() - '1 year'::interval ) AS d
+		LEFT JOIN
+		( SELECT cell_id, date_part('doy', "date") AS ddoy, avg(flow_mean) AS dayly_avg_over_years
+				FROM hyfaa.data_mgbstandard
+				GROUP BY cell_id, ddoy
+				ORDER BY ddoy DESC, cell_id ) AS by_ddoy
+		USING (cell_id, ddoy)
+		)
+	)
+	SELECT *,
+		avg(flow_mean) OVER ( PARTITION BY cell_id
+							 ORDER BY "date" DESC
+							 ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
+							 AS average
+	FROM has_mean_over_ddoy
 )
-SELECT cell_id, flow_mean_yearly_average,
+SELECT cell_id,
        json_agg(
           json_build_object(
       		'date', date,
-      		'flow', flow_mean,
-      		'flow_anomaly', CASE WHEN flow_mean_yearly_average = 0 THEN null ELSE 100 * (flow_mean - flow_mean_yearly_average) / flow_mean_yearly_average END
+      		'flow', ROUND(flow_mean),
+      		'flow_anomaly', CASE WHEN average = 0 THEN null ELSE ROUND((100 * (flow_mean - average) / average)::numeric) END
       		)
-	        ORDER BY date DESC
+	        ORDER BY "date" DESC
         ) AS values
-FROM data_15d_with_average AS v
-GROUP BY cell_id, flow_mean_yearly_average
+FROM has_average
+WHERE "date" IN (SELECT "date" from hyfaa.data_assimilated
+						GROUP BY "date" ORDER BY "date" DESC LIMIT 15)
+GROUP BY cell_id
 ORDER BY cell_id;
 
 ALTER TABLE hyfaa.data_mgbstandard_aggregate_json
     OWNER TO postgres;
 
-COMMENT ON  VIEW hyfaa.data_mgbstandard_aggregate_json IS 'Keep only the flow mean. Compute the average for each minibasin. Use it to compute the anomaly. Aggregate the results for the n last days into a json field';
+COMMENT ON  VIEW hyfaa.data_mgbstandard_aggregate_json IS
+    'Keep only the flow mean. Compute a floating average for each minibasin
+    (average over the day +/- 15days, but spanning over the years.)
+    Use it to compute the anomaly. Round the values.
+    Aggregate the results for the n last days into a json field';
 
 
 

@@ -38,8 +38,8 @@ CREATE MATERIALIZED VIEW hyfaa.data_with_assim_aggregate_geo
 AS
  SELECT data.*,
         geo.ordem,
-        geo.width,
-        geo.depth,
+        ROUND(geo.width::numeric) AS width,
+        ROUND(geo.depth::numeric, 2) AS depth,
         ST_Transform(geo.wkb_geometry, 4326)::geometry(Geometry,4326) AS wkb_geometry
   FROM hyfaa.data_assimilated_aggregate_json AS data,
        geospatial.drainage_mgb_niger_masked AS geo
@@ -77,8 +77,8 @@ CREATE MATERIALIZED VIEW hyfaa.data_with_mgbstandard_aggregate_geo
 AS
  SELECT data.*,
         geo.ordem,
-        geo.width,
-        geo.depth,
+        ROUND(geo.width::numeric) AS width,
+        ROUND(geo.depth::numeric, 2) AS depth,
         ST_Transform(geo.wkb_geometry, 4326)::geometry(Geometry,4326) AS wkb_geometry
   FROM hyfaa.data_mgbstandard_aggregate_json AS data,
        geospatial.drainage_mgb_niger_masked AS geo
