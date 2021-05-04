@@ -115,9 +115,9 @@ BEGIN
 			)
 
 			SELECT 	 d_with_assim."date",
-					 d_with_assim.flow_median AS flow,
-					 d_with_assim.flow_mad,
-					 expect.expected
+					 ROUND(d_with_assim.flow_median::numeric) AS flow,
+					 ROUND(d_with_assim.flow_mad::numeric,1) AS flow_mad,
+					 ROUND(expect.expected::numeric) AS expected
 			FROM  d_with_assim LEFT JOIN expect
 								USING(ddoy, cell_id)
 			WHERE cell_id=mini
@@ -139,7 +139,7 @@ DECLARE jsonarray json;
         BEGIN
         WITH tbl AS (
             SELECT 	"date",
-                    flow_mean AS flow
+                    ROUND(flow_mean::numeric) AS flow
             FROM  hyfaa.data_mgbstandard
             WHERE cell_id=mini AND "date" > now()-timeinterval::interval
 			ORDER BY "date" DESC
@@ -160,8 +160,8 @@ DECLARE jsonarray json;
 BEGIN
 		WITH tbl AS (
             SELECT 	"date",
-					 flow_median AS flow,
-					 flow_mad
+					 ROUND(flow_median::numeric) AS flow,
+					 ROUND(flow_mad::numeric,1) AS flow_mad
             FROM  hyfaa.data_forecast
             WHERE cell_id=mini AND "date" > now()-timeinterval::interval
 			ORDER BY "date" DESC
