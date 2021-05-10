@@ -54,23 +54,6 @@ ALTER TABLE hyfaa.data_with_assim_aggregate_geo
 COMMENT ON MATERIALIZED VIEW hyfaa.data_with_assim_aggregate_geo
     IS 'Combine the geometries for the minibasins with the most recent values (n last days, stored in a json object)';
 
--- Update the materialized view using a trigger
-
-CREATE OR REPLACE FUNCTION hyfaa.refresh_mat_view_for_assim()
-    RETURNS TRIGGER LANGUAGE plpgsql
-    SECURITY DEFINER
-    AS $$
-    BEGIN
-        REFRESH  MATERIALIZED VIEW CONCURRENTLY hyfaa.data_with_assim_aggregate_geo;
-        RETURN null;
-    END $$;
-
-CREATE TRIGGER refresh_mat_view_for_assim
-    AFTER INSERT OR UPDATE ON hyfaa."state"
-    FOR EACH STATEMENT
-    EXECUTE PROCEDURE hyfaa.refresh_mat_view_for_assim();
-
-
 
 -- on mgbstandard data
 CREATE MATERIALIZED VIEW hyfaa.data_with_mgbstandard_aggregate_geo
@@ -92,22 +75,6 @@ ALTER TABLE hyfaa.data_with_mgbstandard_aggregate_geo
 
 COMMENT ON MATERIALIZED VIEW hyfaa.data_with_mgbstandard_aggregate_geo
     IS 'Combine the geometries for the minibasins with the most recent values (n last days, stored in a json object)';
-
--- Update the materialized view using a trigger
-
-CREATE OR REPLACE FUNCTION hyfaa.refresh_mat_view_for_mgbstandard()
-    RETURNS TRIGGER LANGUAGE plpgsql
-    SECURITY DEFINER
-    AS $$
-    BEGIN
-        REFRESH  MATERIALIZED VIEW CONCURRENTLY hyfaa.data_with_mgbstandard_aggregate_geo;
-        RETURN null;
-    END $$;
-
-CREATE TRIGGER refresh_mat_view_for_mgbstandard
-    AFTER INSERT OR UPDATE ON hyfaa."state"
-    FOR EACH STATEMENT
-    EXECUTE PROCEDURE hyfaa.refresh_mat_view_for_mgbstandard();
 
 
 -----------------------------------------------------

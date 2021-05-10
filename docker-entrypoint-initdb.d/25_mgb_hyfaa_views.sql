@@ -6,32 +6,33 @@
 -- on assimilated data
 CREATE MATERIALIZED VIEW hyfaa.data_assimilated_with_floating_avg_and_anomaly
  AS
- WITH has_average AS (
-	WITH has_mean_over_ddoy AS (SELECT * FROM (
-		( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_assimilated WHERE "date" >= now() - '1 year'::interval ) AS d
-		LEFT JOIN
-		( SELECT cell_id, date_part('doy', "date") AS ddoy, avg(flow_median) AS dayly_avg_over_years
-				FROM hyfaa.data_assimilated
-				GROUP BY cell_id, ddoy
-				ORDER BY ddoy DESC, cell_id ) AS by_ddoy
-		USING (cell_id, ddoy)
-		)
-	)
-	SELECT *,
-		avg(flow_median) OVER ( PARTITION BY cell_id
-							 ORDER BY "date" DESC
-							 ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
-							 AS average
-	FROM has_mean_over_ddoy
-)
-SELECT cell_id,
-       "date",
-       flow_median AS flow,
-       flow_mad,
-       average AS expected,
-       CASE WHEN average = 0 THEN null ELSE (100 * (flow_median - average) / average)::numeric END AS flow_anomaly
-FROM has_average
-ORDER BY cell_id;
+     WITH has_average AS (
+        WITH has_mean_over_ddoy AS (SELECT * FROM (
+            ( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_assimilated WHERE "date" >= now() - '1 year'::interval ) AS d
+            LEFT JOIN
+            ( SELECT cell_id, date_part('doy', "date") AS ddoy, avg(flow_median) AS dayly_avg_over_years
+                    FROM hyfaa.data_assimilated
+                    GROUP BY cell_id, ddoy
+                    ORDER BY ddoy DESC, cell_id ) AS by_ddoy
+            USING (cell_id, ddoy)
+            )
+        )
+        SELECT *,
+            avg(flow_median) OVER ( PARTITION BY cell_id
+                                 ORDER BY "date" DESC
+                                 ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
+                                 AS average
+        FROM has_mean_over_ddoy
+    )
+    SELECT cell_id,
+           "date",
+           flow_median AS flow,
+           flow_mad,
+           average AS expected,
+           CASE WHEN average = 0 THEN null ELSE (100 * (flow_median - average) / average)::numeric END AS flow_anomaly
+    FROM has_average
+    ORDER BY cell_id
+WITH DATA;
 
 ALTER TABLE hyfaa.data_assimilated_with_floating_avg_and_anomaly
     OWNER TO postgres;
@@ -72,31 +73,32 @@ COMMENT ON  VIEW hyfaa.data_assimilated_aggregate_json IS
 -- on mgbstandard data
 CREATE MATERIALIZED VIEW hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
  AS
- WITH has_average AS (
-	WITH has_mean_over_ddoy AS (SELECT * FROM (
-		( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_mgbstandard WHERE "date" >= now() - '1 year'::interval ) AS d
-		LEFT JOIN
-		( SELECT cell_id, date_part('doy', "date") AS ddoy, avg(flow_mean) AS dayly_avg_over_years
-				FROM hyfaa.data_mgbstandard
-				GROUP BY cell_id, ddoy
-				ORDER BY ddoy DESC, cell_id ) AS by_ddoy
-		USING (cell_id, ddoy)
-		)
-	)
-	SELECT *,
-		avg(flow_mean) OVER ( PARTITION BY cell_id
-							 ORDER BY "date" DESC
-							 ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
-							 AS average
-	FROM has_mean_over_ddoy
-)
-SELECT cell_id,
-       "date",
-       flow_mean AS flow,
-       average AS expected,
-       CASE WHEN average = 0 THEN null ELSE (100 * (flow_mean - average) / average)::numeric END AS flow_anomaly
-FROM has_average
-ORDER BY cell_id;
+     WITH has_average AS (
+        WITH has_mean_over_ddoy AS (SELECT * FROM (
+            ( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_mgbstandard WHERE "date" >= now() - '1 year'::interval ) AS d
+            LEFT JOIN
+            ( SELECT cell_id, date_part('doy', "date") AS ddoy, avg(flow_mean) AS dayly_avg_over_years
+                    FROM hyfaa.data_mgbstandard
+                    GROUP BY cell_id, ddoy
+                    ORDER BY ddoy DESC, cell_id ) AS by_ddoy
+            USING (cell_id, ddoy)
+            )
+        )
+        SELECT *,
+            avg(flow_mean) OVER ( PARTITION BY cell_id
+                                 ORDER BY "date" DESC
+                                 ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
+                                 AS average
+        FROM has_mean_over_ddoy
+    )
+    SELECT cell_id,
+           "date",
+           flow_mean AS flow,
+           average AS expected,
+           CASE WHEN average = 0 THEN null ELSE (100 * (flow_mean - average) / average)::numeric END AS flow_anomaly
+    FROM has_average
+    ORDER BY cell_id
+WITH DATA;
 
 ALTER TABLE hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
     OWNER TO postgres;
