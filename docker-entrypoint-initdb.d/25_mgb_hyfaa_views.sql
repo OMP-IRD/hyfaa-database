@@ -4,6 +4,7 @@
 
 -----------------------------------------------------
 -- on assimilated data
+DROP MATERIALIZED VIEW IF EXISTS hyfaa.data_assimilated_with_floating_avg_and_anomaly CASCADE;
 CREATE MATERIALIZED VIEW hyfaa.data_assimilated_with_floating_avg_and_anomaly
  AS
      WITH has_average AS (
@@ -34,6 +35,8 @@ CREATE MATERIALIZED VIEW hyfaa.data_assimilated_with_floating_avg_and_anomaly
     ORDER BY cell_id
 WITH DATA;
 
+CREATE UNIQUE INDEX ON hyfaa.data_assimilated_with_floating_avg_and_anomaly (cell_id, "date");
+
 ALTER TABLE hyfaa.data_assimilated_with_floating_avg_and_anomaly
     OWNER TO postgres;
 
@@ -41,6 +44,10 @@ COMMENT ON MATERIALIZED VIEW hyfaa.data_assimilated_with_floating_avg_and_anomal
     'Keep only the flow median and flow_mad. Compute a floating average for each minibasin
     (average over the day +/- 15days, but spanning over the years.)
     Use it to compute the anomaly.';
+
+GRANT SELECT
+   ON TABLE hyfaa.data_assimilated_with_floating_avg_and_anomaly
+   TO hyfaa_backend;
 
 
 CREATE OR REPLACE VIEW hyfaa.data_assimilated_aggregate_json
@@ -71,6 +78,7 @@ COMMENT ON  VIEW hyfaa.data_assimilated_aggregate_json IS
 
 -----------------------------------------------------
 -- on mgbstandard data
+DROP MATERIALIZED VIEW IF EXISTS hyfaa.data_mgbstandard_with_floating_avg_and_anomaly CASCADE;
 CREATE MATERIALIZED VIEW hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
  AS
      WITH has_average AS (
@@ -100,6 +108,8 @@ CREATE MATERIALIZED VIEW hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
     ORDER BY cell_id
 WITH DATA;
 
+CREATE UNIQUE INDEX ON hyfaa.data_mgbstandard_with_floating_avg_and_anomaly (cell_id, "date");
+
 ALTER TABLE hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
     OWNER TO postgres;
 
@@ -107,6 +117,10 @@ COMMENT ON MATERIALIZED VIEW hyfaa.data_mgbstandard_with_floating_avg_and_anomal
     'Keep only the flow mean. Compute a floating average for each minibasin
     (average over the day +/- 15days, but spanning over the years.)
     Use it to compute the anomaly.';
+
+GRANT SELECT
+   ON TABLE hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
+   TO hyfaa_backend;
 
 
 CREATE OR REPLACE VIEW hyfaa.data_mgbstandard_aggregate_json
