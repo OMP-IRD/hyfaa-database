@@ -2,6 +2,8 @@
 -- Aggregate the last 15d values in a json field
 -----------------------------------------------------
 
+
+
 -----------------------------------------------------
 -- on assimilated data
 DROP MATERIALIZED VIEW IF EXISTS hyfaa.data_assimilated_with_floating_avg_and_anomaly CASCADE;
@@ -14,7 +16,7 @@ CREATE MATERIALIZED VIEW hyfaa.data_assimilated_with_floating_avg_and_anomaly
         has_mean_over_ddoy AS (SELECT * FROM (
             ( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_assimilated WHERE "date" >= now() - '1 year'::interval ) AS d
             LEFT JOIN
-            ( SELECT cell_id, date_part('doy', "date") AS ddoy, avg(flow_median) AS dayly_avg_over_years
+            ( SELECT cell_id, date_part('doy', "date") AS ddoy, median(flow_median) AS dayly_avg_over_years
                     FROM d
                     GROUP BY cell_id, ddoy
                     ORDER BY ddoy DESC, cell_id ) AS by_ddoy
@@ -22,7 +24,7 @@ CREATE MATERIALIZED VIEW hyfaa.data_assimilated_with_floating_avg_and_anomaly
             )
         )
         SELECT *,
-            avg(flow_median) OVER ( PARTITION BY cell_id
+            median(flow_median) OVER ( PARTITION BY cell_id
                                  ORDER BY "date" DESC
                                  ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
                                  AS average
@@ -91,7 +93,7 @@ CREATE MATERIALIZED VIEW hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
         has_mean_over_ddoy AS (SELECT * FROM (
             ( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_mgbstandard WHERE "date" >= now() - '1 year'::interval ) AS d
             LEFT JOIN
-            ( SELECT cell_id, date_part('doy', "date") AS ddoy, avg(flow_mean) AS dayly_avg_over_years
+            ( SELECT cell_id, date_part('doy', "date") AS ddoy, median(flow_mean) AS dayly_avg_over_years
                     FROM d
                     GROUP BY cell_id, ddoy
                     ORDER BY ddoy DESC, cell_id ) AS by_ddoy
@@ -99,7 +101,7 @@ CREATE MATERIALIZED VIEW hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
             )
         )
         SELECT *,
-            avg(flow_mean) OVER ( PARTITION BY cell_id
+            median(flow_mean) OVER ( PARTITION BY cell_id
                                  ORDER BY "date" DESC
                                  ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
                                  AS average

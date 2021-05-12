@@ -124,6 +124,8 @@ COMMENT ON COLUMN hyfaa.data_assimilated.is_analysis IS 'Boolean. Whether the va
 ALTER TABLE hyfaa.data_assimilated OWNER TO postgres;
 -- ddl-end --
 
+CREATE UNIQUE INDEX ON hyfaa.data_assimilated (cell_id);
+CREATE UNIQUE INDEX ON hyfaa.data_assimilated ("date");
 
 -- object: hyfaa.data_mgbstandard | type: TABLE --
 -- DROP TABLE IF EXISTS hyfaa.data_mgbstandard CASCADE;
@@ -155,6 +157,8 @@ COMMENT ON COLUMN hyfaa.data_mgbstandard.is_analysis IS 'Boolean. Whether the va
 ALTER TABLE hyfaa.data_mgbstandard OWNER TO postgres;
 -- ddl-end --
 
+CREATE UNIQUE INDEX ON hyfaa.data_mgbstandard (cell_id);
+CREATE UNIQUE INDEX ON hyfaa.data_mgbstandard ("date");
 
 -- object: hyfaa.data_forecast | type: TABLE --
 -- DROP TABLE IF EXISTS hyfaa.data_forecast CASCADE;
