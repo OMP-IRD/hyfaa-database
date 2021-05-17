@@ -7,53 +7,6 @@
 -----------------------------------------------------
 -- on assimilated data
 DROP MATERIALIZED VIEW IF EXISTS hyfaa.data_assimilated_with_floating_avg_and_anomaly CASCADE;
-CREATE MATERIALIZED VIEW hyfaa.data_assimilated_with_floating_avg_and_anomaly
- AS
-     WITH has_average AS (
-        WITH d AS (SELECT * FROM hyfaa.data_assimilated
-			WHERE date_part('year', "date") < date_part('year', now())
-        ),
-        has_mean_over_ddoy AS (SELECT * FROM (
-            ( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_assimilated WHERE "date" >= now() - '1 year'::interval ) AS d
-            LEFT JOIN
-            ( SELECT cell_id, date_part('doy', "date") AS ddoy, median(flow_median) AS dayly_avg_over_years
-                    FROM d
-                    GROUP BY cell_id, ddoy
-                    ORDER BY ddoy DESC, cell_id ) AS by_ddoy
-            USING (cell_id, ddoy)
-            )
-        )
-        SELECT *,
-            median(flow_median) OVER ( PARTITION BY cell_id
-                                 ORDER BY "date" DESC
-                                 ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
-                                 AS average
-        FROM has_mean_over_ddoy
-    )
-    SELECT cell_id,
-           "date",
-           flow_median AS flow,
-           flow_mad,
-           average AS expected,
-           CASE WHEN average = 0 THEN 0 ELSE (100 * (flow_median - average) / average)::numeric END AS flow_anomaly
-    FROM has_average
-    ORDER BY cell_id
-WITH DATA;
-
-CREATE UNIQUE INDEX ON hyfaa.data_assimilated_with_floating_avg_and_anomaly (cell_id, "date");
-
-ALTER TABLE hyfaa.data_assimilated_with_floating_avg_and_anomaly
-    OWNER TO postgres;
-
-COMMENT ON MATERIALIZED VIEW hyfaa.data_assimilated_with_floating_avg_and_anomaly IS
-    'Keep only the flow median and flow_mad. Compute a floating average for each minibasin
-    (average over the day +/- 15days, but spanning over the years.)
-    Use it to compute the anomaly.';
-
-GRANT SELECT
-   ON TABLE hyfaa.data_assimilated_with_floating_avg_and_anomaly
-   TO hyfaa_backend;
-
 
 CREATE OR REPLACE VIEW hyfaa.data_assimilated_aggregate_json
  AS
@@ -61,12 +14,12 @@ SELECT cell_id,
        json_agg(
           json_build_object(
       		'date', date,
-      		'flow', ROUND(flow),
+      		'flow', ROUND(flow_median),
       		'flow_anomaly', ROUND(flow_anomaly)
       		)
 	        ORDER BY "date" DESC
         ) AS values
-FROM hyfaa.data_assimilated_with_floating_avg_and_anomaly
+FROM hyfaa.data_assimilated
 WHERE "date" IN (SELECT "date" from hyfaa.data_assimilated
 						GROUP BY "date" ORDER BY "date" DESC LIMIT 15)
 GROUP BY cell_id
@@ -84,52 +37,6 @@ COMMENT ON  VIEW hyfaa.data_assimilated_aggregate_json IS
 -----------------------------------------------------
 -- on mgbstandard data
 DROP MATERIALIZED VIEW IF EXISTS hyfaa.data_mgbstandard_with_floating_avg_and_anomaly CASCADE;
-CREATE MATERIALIZED VIEW hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
- AS
-     WITH has_average AS (
-        WITH d AS (SELECT * FROM hyfaa.data_mgbstandard
-			WHERE date_part('year', "date") < date_part('year', now())
-        ),
-        has_mean_over_ddoy AS (SELECT * FROM (
-            ( SELECT *, date_part('doy', "date") AS ddoy FROM hyfaa.data_mgbstandard WHERE "date" >= now() - '1 year'::interval ) AS d
-            LEFT JOIN
-            ( SELECT cell_id, date_part('doy', "date") AS ddoy, median(flow_mean) AS dayly_avg_over_years
-                    FROM d
-                    GROUP BY cell_id, ddoy
-                    ORDER BY ddoy DESC, cell_id ) AS by_ddoy
-            USING (cell_id, ddoy)
-            )
-        )
-        SELECT *,
-            median(flow_mean) OVER ( PARTITION BY cell_id
-                                 ORDER BY "date" DESC
-                                 ROWS BETWEEN 15 preceding AND 15 FOLLOWING )
-                                 AS average
-        FROM has_mean_over_ddoy
-    )
-    SELECT cell_id,
-           "date",
-           flow_mean AS flow,
-           average AS expected,
-           CASE WHEN average = 0 THEN 0::numeric ELSE (100 * (flow_mean - average) / average)::numeric END AS flow_anomaly
-    FROM has_average
-    ORDER BY cell_id
-WITH DATA;
-
-CREATE UNIQUE INDEX ON hyfaa.data_mgbstandard_with_floating_avg_and_anomaly (cell_id, "date");
-
-ALTER TABLE hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
-    OWNER TO postgres;
-
-COMMENT ON MATERIALIZED VIEW hyfaa.data_mgbstandard_with_floating_avg_and_anomaly IS
-    'Keep only the flow mean. Compute a floating average for each minibasin
-    (average over the day +/- 15days, but spanning over the years.)
-    Use it to compute the anomaly.';
-
-GRANT SELECT
-   ON TABLE hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
-   TO hyfaa_backend;
-
 
 CREATE OR REPLACE VIEW hyfaa.data_mgbstandard_aggregate_json
  AS
@@ -137,12 +44,12 @@ SELECT cell_id,
        json_agg(
           json_build_object(
       		'date', date,
-      		'flow', ROUND(flow),
+      		'flow', ROUND(flow_mean),
       		'flow_anomaly', ROUND(flow_anomaly)
       		)
 	        ORDER BY "date" DESC
         ) AS values
-FROM hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
+FROM hyfaa.data_mgbstandard
 WHERE "date" IN (SELECT "date" from hyfaa.data_mgbstandard
 						GROUP BY "date" ORDER BY "date" DESC LIMIT 15)
 GROUP BY cell_id
@@ -167,10 +74,10 @@ DECLARE jsonarray json;
 BEGIN
 		WITH tbl AS (
 		    SELECT "date",
-		           ROUND(flow::numeric) AS flow,
+		           ROUND(flow_median::numeric) AS flow,
 		           ROUND(flow_mad::numeric) AS flow_mad,
-		           ROUND(expected::numeric) AS expected
-		    FROM hyfaa.data_assimilated_with_floating_avg_and_anomaly
+		           ROUND(flow_expected::numeric) AS expected
+		    FROM hyfaa.data_assimilated
 		    WHERE cell_id=mini AND "date" > now()-timeinterval::interval
 		    ORDER BY "date" DESC
 		)
@@ -190,9 +97,9 @@ DECLARE jsonarray json;
         BEGIN
         WITH tbl AS (
             SELECT 	"date",
-		           ROUND(flow::numeric) AS flow,
-		           ROUND(expected::numeric) AS expected
-            FROM  hyfaa.data_mgbstandard_with_floating_avg_and_anomaly
+		           ROUND(flow_mean::numeric) AS flow,
+		           ROUND(flow_expected::numeric) AS expected
+            FROM  hyfaa.data_mgbstandard
             WHERE cell_id=mini AND "date" > now()-timeinterval::interval
 			ORDER BY "date" DESC
         )

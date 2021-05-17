@@ -90,6 +90,8 @@ CREATE TABLE hyfaa.data_assimilated(
 	flow_median float,
 	flow_stddev float,
 	flow_mad float,
+	flow_expected float,
+	flow_anomaly float,
 	update_time timestamptz,
 	is_analysis boolean,
 	CONSTRAINT data_assimilated_pk PRIMARY KEY (cell_id,date)
@@ -117,6 +119,10 @@ COMMENT ON COLUMN hyfaa.data_assimilated.flow_stddev IS 'Stream flow. Standard d
 -- ddl-end --
 COMMENT ON COLUMN hyfaa.data_assimilated.flow_mad IS 'Stream flow. Median absolute  deviation';
 -- ddl-end --
+COMMENT ON COLUMN hyfaa.data_assimilated.flow_expected IS 'Expected value. Calculated using a floating median, over the flow_median values taken on the day surrounding the current day (+ or - 10 days around), during the previous years';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_assimilated.flow_anomaly IS 'Represents the anomaly compared to expected data. Formula is 100 * (anomaly - expected) / expected';
+-- ddl-end --
 COMMENT ON COLUMN hyfaa.data_assimilated.update_time IS 'Time of last update';
 -- ddl-end --
 COMMENT ON COLUMN hyfaa.data_assimilated.is_analysis IS 'Boolean. Whether the value comes from analysis or control series';
@@ -124,8 +130,8 @@ COMMENT ON COLUMN hyfaa.data_assimilated.is_analysis IS 'Boolean. Whether the va
 ALTER TABLE hyfaa.data_assimilated OWNER TO postgres;
 -- ddl-end --
 
-CREATE UNIQUE INDEX ON hyfaa.data_assimilated (cell_id);
-CREATE UNIQUE INDEX ON hyfaa.data_assimilated ("date");
+CREATE INDEX ON hyfaa.data_assimilated (cell_id);
+CREATE INDEX ON hyfaa.data_assimilated ("date");
 
 -- object: hyfaa.data_mgbstandard | type: TABLE --
 -- DROP TABLE IF EXISTS hyfaa.data_mgbstandard CASCADE;
@@ -134,6 +140,8 @@ CREATE TABLE hyfaa.data_mgbstandard(
 	date date NOT NULL,
 	elevation_mean float,
 	flow_mean float,
+	flow_expected float,
+	flow_anomaly float,
 	update_time timestamptz,
 	is_analysis boolean,
 	CONSTRAINT data_mgbstandard_pk PRIMARY KEY (cell_id,date)
@@ -150,6 +158,10 @@ COMMENT ON COLUMN hyfaa.data_mgbstandard.elevation_mean IS 'Water elevation in m
 -- ddl-end --
 COMMENT ON COLUMN hyfaa.data_mgbstandard.flow_mean IS 'Stream flow. Mean value';
 -- ddl-end --
+COMMENT ON COLUMN hyfaa.data_assimilated.flow_expected IS 'Expected value. Calculated using a floating median, over the flow_mean values taken on the day surrounding the current day (+ or - 10 days around), during the previous years';
+-- ddl-end --
+COMMENT ON COLUMN hyfaa.data_assimilated.flow_anomaly IS 'Represents the anomaly compared to expected data. Formula is 100 * (anomaly - expected) / expected';
+-- ddl-end --
 COMMENT ON COLUMN hyfaa.data_mgbstandard.update_time IS 'Time of last update';
 -- ddl-end --
 COMMENT ON COLUMN hyfaa.data_mgbstandard.is_analysis IS 'Boolean. Whether the value comes from analysis or control series';
@@ -157,8 +169,8 @@ COMMENT ON COLUMN hyfaa.data_mgbstandard.is_analysis IS 'Boolean. Whether the va
 ALTER TABLE hyfaa.data_mgbstandard OWNER TO postgres;
 -- ddl-end --
 
-CREATE UNIQUE INDEX ON hyfaa.data_mgbstandard (cell_id);
-CREATE UNIQUE INDEX ON hyfaa.data_mgbstandard ("date");
+CREATE INDEX ON hyfaa.data_mgbstandard (cell_id);
+CREATE INDEX ON hyfaa.data_mgbstandard ("date");
 
 -- object: hyfaa.data_forecast | type: TABLE --
 -- DROP TABLE IF EXISTS hyfaa.data_forecast CASCADE;
@@ -173,6 +185,8 @@ CREATE TABLE hyfaa.data_forecast(
 	flow_median float,
 	flow_stddev float,
 	flow_mad float,
+	flow_expected float,
+	flow_anomaly float,
 	update_time timestamptz,
 	is_analysis boolean,
 	CONSTRAINT data_forecast_pk PRIMARY KEY (cell_id,date)
