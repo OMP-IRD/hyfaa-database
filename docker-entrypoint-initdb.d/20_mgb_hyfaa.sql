@@ -90,10 +90,10 @@ CREATE TABLE hyfaa.data_assimilated(
 	flow_median float,
 	flow_stddev float,
 	flow_mad float,
-	flow_expected float,
-	flow_anomaly float,
 	update_time timestamptz,
 	is_analysis boolean,
+	flow_expected float,
+	flow_anomaly float,
 	CONSTRAINT data_assimilated_pk PRIMARY KEY (cell_id,date)
 );
 -- ddl-end --
@@ -140,10 +140,10 @@ CREATE TABLE hyfaa.data_mgbstandard(
 	date date NOT NULL,
 	elevation_mean float,
 	flow_mean float,
-	flow_expected float,
-	flow_anomaly float,
 	update_time timestamptz,
 	is_analysis boolean,
+	flow_expected float,
+	flow_anomaly float,
 	CONSTRAINT data_mgbstandard_pk PRIMARY KEY (cell_id,date)
 );
 -- ddl-end --
@@ -185,8 +185,6 @@ CREATE TABLE hyfaa.data_forecast(
 	flow_median float,
 	flow_stddev float,
 	flow_mad float,
-	flow_expected float,
-	flow_anomaly float,
 	update_time timestamptz,
 	is_analysis boolean,
 	CONSTRAINT data_forecast_pk PRIMARY KEY (cell_id,date)
