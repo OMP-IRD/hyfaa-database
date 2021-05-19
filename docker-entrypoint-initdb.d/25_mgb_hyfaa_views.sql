@@ -118,12 +118,30 @@ CREATE OR REPLACE FUNCTION hyfaa.get_forecast_values_for_minibasin(mini integer,
 $$
 DECLARE jsonarray json;
 BEGIN
-		WITH tbl AS (
-            SELECT 	"date",
-					 ROUND(flow_median::numeric) AS flow,
-					 ROUND(flow_mad::numeric,1) AS flow_mad
-            FROM  hyfaa.data_forecast
-            WHERE cell_id=mini AND "date" > now()-timeinterval::interval
+        -- Merge the relevant forecast data (for days _after_ the last available day in mgbstandard data
+        -- with the last days from said dataset
+		WITH tbl_union AS (
+            (SELECT 'mgbstandard' AS source, "date", flow_mean AS flow, 0 AS flow_mad
+            FROM hyfaa.data_mgbstandard
+            WHERE cell_id=mini
+            ORDER BY "date" DESC
+            LIMIT 20)
+
+            UNION
+
+            (SELECT 'forecast' AS source, "date", flow_median AS flow, flow_mad
+            FROM hyfaa.data_forecast
+            WHERE cell_id=mini AND "date" > (SELECT MAX("date") FROM hyfaa.data_mgbstandard)
+            ORDER BY "date" DESC)
+
+            ORDER BY "date" DESC
+        ),
+	    -- limit to the time interval given in the function call. This is not really relevant for forecast data, but is
+	    -- kept for the sake of homogeneity with other data series
+		tbl AS (
+            SELECT 	*
+            FROM  tbl_union
+            WHERE "date" > now()-timeinterval::interval
 			ORDER BY "date" DESC
         )
         SELECT array_to_json(array_agg(row_to_json(tbl))) FROM tbl INTO jsonarray;
@@ -132,4 +150,5 @@ END;
 $$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION hyfaa.get_forecast_values_for_minibasin(integer, character varying)
-    IS 'Get forecast data as aggregated json array. ';
+    IS 'Get forecast data as aggregated json array. Actually, only the more recent avlues are forecast data, the
+    previous ones being taken from the mgb_standard dataset';
