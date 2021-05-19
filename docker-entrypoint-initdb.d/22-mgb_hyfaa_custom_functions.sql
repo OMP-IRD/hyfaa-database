@@ -121,6 +121,7 @@ BEGIN
     FOR TABLE_RECORD IN EXECUTE format(query1, _tbl) USING lower_date
         LOOP
             EXECUTE format(query2, _tbl, _columnname, _columnname, _tbl) USING TABLE_RECORD."upt_date", _nbdays;
+            RAISE INFO 'Computed flow_expected and flow_anomaly for date %', TABLE_RECORD."upt_date";
             counter := counter + 1;
         END LOOP;
     RETURN counter;

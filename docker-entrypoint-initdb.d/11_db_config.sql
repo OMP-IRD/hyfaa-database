@@ -1,0 +1,1 @@
+SET log_min_error_statement = 'WARNING';
