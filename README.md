@@ -24,6 +24,8 @@ docker run -it --rm --name pg  -e WITH_SAMPLE_DATA=yes --env-file pg.env -p 5432
 ```
 But it is advised to use the docker-compose config from the parent repo [hyfaa-mgb-platform](https://github.com/OMP-IRD/hyfaa-mgb-platform).
 
-##TODO:
-- parametrize view to get n last days ?
-- secure passwords (get them as sealed secrets)
+## DB documentation
+
+In the doc folder, you have some documentation about the hyfaa database:
+* [Database structure](doc/database-structure.md)
+* [Database Usage](doc/database-usage.md)
