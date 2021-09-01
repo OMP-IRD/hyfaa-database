@@ -6,16 +6,16 @@ This database is used by
 * the pg_tileserv service
 
 ## Import script
-The hyfaa data is, in the first step (scheduler), written into netCDF files.
+The hyfaa data is, in the first step ([scheduler](https://github.com/OMP-IRD/hyfaa-scheduler)), written into netCDF files.
 Those file are not that practical for geospatial data viz online, so they are
 then published into this database, using an import script. For now, this
-script is located in the hyfaa-backend repo (in the end, it would make sens
+script is located in the [hyfaa-backend repo](https://github.com/OMP-IRD/hyfaa-backend/tree/main/src/scripts) (in the end, it would make sens
 to move it into the scheduler repo).
 
 The script is called hyfaa_netcdf2DB.py.
 
 ## Backend API
-The backend provides an API giving access to the data, at the stations
+The [backend]((https://github.com/OMP-IRD/hyfaa-backend/) provides an API giving access to the data, at the stations
 ' location. Stations being, actually, a selection of highlighted minibasins
 . No relation with the hydrosat virtual stations.
 
